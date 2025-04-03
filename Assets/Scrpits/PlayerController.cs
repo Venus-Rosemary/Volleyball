@@ -12,9 +12,51 @@ public class PlayerController : MonoBehaviour
     public float hitCooldown = 0.5f;
     private float lastHitTime = 0f;
 
+    public GameObject HitBallTrigger;
+
+    void Start()
+    {
+        if (HitBallTrigger != null)
+        {
+            HitBallTrigger.SetActive(false);
+        }
+    }
+
     void Update()
     {
         Player_Move();
+        CheckHitTrigger();
+    }
+
+    private void CheckHitTrigger()
+    {
+        GameObject ball = GameObject.FindGameObjectWithTag("Ball");
+        if (ball != null)
+        {
+            NewBallMovement ballMovement = ball.GetComponent<NewBallMovement>();
+            if (ballMovement != null && HitBallTrigger != null)
+            {
+                bool shouldActivate = false;
+                
+                if (ballMovement.down && Input.GetKey(KeyCode.O))
+                {
+                    shouldActivate = true;
+                    HitBallTrigger.transform.localPosition = new Vector3(0, 0, 1);
+                }
+                else if (ballMovement.centre && Input.GetKey(KeyCode.F))
+                {
+                    shouldActivate = true;
+                    HitBallTrigger.transform.localPosition = new Vector3(0, 0, 1);
+                }
+                else if (ballMovement.top && Input.GetKey(KeyCode.P))
+                {
+                    shouldActivate = true;
+                    HitBallTrigger.transform.localPosition = new Vector3(0, 1.5f, 1);
+                }
+
+                HitBallTrigger.SetActive(shouldActivate);
+            }
+        }
     }
     #region 移动
     private void Player_Move()
@@ -22,12 +64,17 @@ public class PlayerController : MonoBehaviour
         float moveHorizontal = Input.GetAxisRaw("Horizontal");
         float moveVertical = Input.GetAxisRaw("Vertical");
 
-        Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical).normalized;
+        // 将输入方向转换为世界空间
+        Vector3 movement = CoordinateHelper.GameToWorldSpace(new Vector3(moveHorizontal, 0.0f, moveVertical)).normalized;
         transform.position += movement * Time.deltaTime * moveSpeed;
 
-        float clampedX = Mathf.Clamp(transform.position.x, -boundaryX, boundaryX);
-        float clampedZ = Mathf.Clamp(transform.position.z, -boundaryZ, -4f);
-        transform.position = new Vector3(clampedX, transform.position.y, clampedZ);
+        // 将世界坐标转换回游戏空间进行边界检查
+        Vector3 gameSpacePos = CoordinateHelper.WorldToGameSpace(transform.position);
+        float clampedX = Mathf.Clamp(gameSpacePos.x, -boundaryX, boundaryX);
+        float clampedZ = Mathf.Clamp(gameSpacePos.z, -boundaryZ, -4f);
+        
+        // 将限制后的坐标转回世界空间
+        transform.position = CoordinateHelper.GameToWorldSpace(new Vector3(clampedX, transform.position.y, clampedZ));
     }
     #endregion
 
@@ -39,9 +86,9 @@ public class PlayerController : MonoBehaviour
             if (Time.time - lastHitTime >= hitCooldown)
             {
                 lastHitTime = Time.time;
-                
+
                 // 获取球的组件并发射
-                Ball ball = other.GetComponent<Ball>();
+                NewBallMovement ball = other.GetComponent<NewBallMovement>();
                 if (ball != null)
                 {
                     ball.LaunchToOpponentCourt();
@@ -55,8 +102,8 @@ public class PlayerController : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        DrawLine_Boundary(Color.blue, Vector3.zero, new Vector3(boundaryX,0, boundaryZ)); // 绘制移动边界线
-        DrawLine_Boundary(Color.green, Vector3.zero, new Vector3(6, 0, 12));// 绘制落点边界线
+        DrawLine_Boundary(Color.blue, new Vector3(0,0.3f,0), new Vector3(boundaryX,0, boundaryZ)); // 绘制移动边界线
+        DrawLine_Boundary(Color.green, new Vector3(0, 0.3f, 0), new Vector3(6, 0, 12));// 绘制落点边界线
     }
 
     //绘制矩形边界
@@ -64,14 +111,19 @@ public class PlayerController : MonoBehaviour
     {
         Gizmos.color = color;
 
-        // 绘制矩形边界线
-        // 前边
-        Gizmos.DrawLine(center + new Vector3(-Radius.x, 0, -Radius.z), center + new Vector3(Radius.x, 0, -Radius.z));
-        // 后边
-        Gizmos.DrawLine(center + new Vector3(-Radius.x, 0, Radius.z), center + new Vector3(Radius.x, 0, Radius.z));
-        // 左边
-        Gizmos.DrawLine(center + new Vector3(-Radius.x, 0, -Radius.z), center + new Vector3(-Radius.x, 0, Radius.z));
-        // 右边
-        Gizmos.DrawLine(center + new Vector3(Radius.x, 0, -Radius.z), center + new Vector3(Radius.x, 0, Radius.z));
+        // 转换所有顶点到世界空间
+        Vector3[] corners = new Vector3[]
+        {
+            CoordinateHelper.GameToWorldSpace(center + new Vector3(-Radius.x, 0, -Radius.z)),
+            CoordinateHelper.GameToWorldSpace(center + new Vector3(Radius.x, 0, -Radius.z)),
+            CoordinateHelper.GameToWorldSpace(center + new Vector3(-Radius.x, 0, Radius.z)),
+            CoordinateHelper.GameToWorldSpace(center + new Vector3(Radius.x, 0, Radius.z))
+        };
+
+        // 绘制边界线
+        Gizmos.DrawLine(corners[0], corners[1]); // 前边
+        Gizmos.DrawLine(corners[2], corners[3]); // 后边
+        Gizmos.DrawLine(corners[0], corners[2]); // 左边
+        Gizmos.DrawLine(corners[1], corners[3]); // 右边
     }
 }

@@ -10,28 +10,28 @@ public class AIBotController : Singleton<AIBotController>
     private Vector3 velocity = Vector3.zero;
     public Vector3 targetPosition;
 
+    public void SetTarget(Vector3 startPos, Vector3 position)
+    {
+        // å°†ä¸–ç•Œåæ ‡è½¬æ¢ä¸ºæ¸¸æˆç©ºé—´è¿›è¡Œè®¡ç®—
+        Vector3 gameSpaceStart = CoordinateHelper.WorldToGameSpace(startPos);
+        Vector3 gameSpacePos = CoordinateHelper.WorldToGameSpace(position);
+        
+        Vector3 displacement = gameSpacePos - gameSpaceStart;
+        Vector3 horizontalDirection = new Vector3(displacement.x, 0, displacement.z).normalized;
+        
+        // è®¡ç®—ç›®æ ‡ä½ç½®å¹¶è½¬å›ä¸–ç•Œç©ºé—´
+        Vector3 gameSpaceTarget = new Vector3(gameSpacePos.x, gameObject.transform.position.y, gameSpacePos.z);
+        targetPosition = CoordinateHelper.GameToWorldSpace(gameSpaceTarget);
+    }
+
     void Update()
     {
         if (targetPosition != Vector3.zero)
         {
-            // Æ½»¬ÒÆ¶¯µ½Ä¿±êµã
-            //Vector3 direction = (targetPosition - transform.position).normalized;
-            //transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
-
             Vector3 direction = targetPosition - transform.position;
-
             float step = moveSpeed * Time.deltaTime;
-
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
         }
-    }
-
-    public void SetTarget(Vector3 startPos, Vector3 position)
-    {
-        Vector3 displacement = position - startPos;
-        Vector3 horizontalDirection = new Vector3(displacement.x, 0, displacement.z).normalized;
-        //targetPosition = new Vector3(position.x,gameObject.transform.position.y, gameObject.transform.position.z);
-        targetPosition = new Vector3(position.x, gameObject.transform.position.y, position.z); 
     }
 
     public float hitCooldown = 0.5f;
@@ -40,18 +40,18 @@ public class AIBotController : Singleton<AIBotController>
     {
         if (other.CompareTag("Ball"))
         {
-            // ¼ì²éÊÇ·ñ¿ÉÒÔ»÷Çò£¨ÀäÈ´Ê±¼ä£©
+            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£©
             if (Time.time - lastHitTime >= hitCooldown)
             {
                 lastHitTime = Time.time;
 
-                // »ñÈ¡ÇòµÄ×é¼ş²¢·¢Éä»ØÍæ¼Ò³¡µØ
-                Ball ball = other.GetComponent<Ball>();
+                // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½
+                NewBallMovement ball = other.GetComponent<NewBallMovement>();
                 if (ball != null)
                 {
                     ball.LaunchToPlayerCourt();
 
-                    // ¿ÉÒÔÌí¼Ó»÷ÇòÒôĞ§»òÌØĞ§
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½Ğ§
                     // PlayHitSound();
                 }
             }
