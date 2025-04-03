@@ -10,7 +10,7 @@ public class Ball : MonoBehaviour
 
     public GameObject targetIndicatorPrefab; // 目标落点指示器预制体
     private GameObject targetIndicator;
-    private GameObject heightIndicator; // 新增高度指示器
+    private GameObject heightIndicator; // 地面指示器
     private int bounceCount = 0; // 弹跳计数
 
     // 记录最后一次击球的时间
