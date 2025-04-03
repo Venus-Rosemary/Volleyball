@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class NewBallMovement : MonoBehaviour
@@ -13,7 +14,8 @@ public class NewBallMovement : MonoBehaviour
     public  float totalTime = 3f; // 总移动时间
     private bool isMoving = false; // 是否在移动
     private Vector3 initialVelocity; // 初始速度
-
+    public bool isServing = false;
+    
     // AI场地和玩家场地的范围
     private readonly Vector2 aiFieldXRange = new Vector2(-6f, 6f);
     private readonly Vector2 aiFieldZRange = new Vector2(4f, 13f);
@@ -24,7 +26,7 @@ public class NewBallMovement : MonoBehaviour
     public bool top = false;
     public bool centre = false;
     public bool down= false;
-
+    
     private void Start()
     {
         if (GetComponent<Rigidbody>() == null)
@@ -86,8 +88,19 @@ public class NewBallMovement : MonoBehaviour
         float x, z, y;
         if (toPlayerField)
         {
-            // 生成玩家场地的目标点
-            x = Random.Range(playerFieldXRange.x, playerFieldXRange.y);
+            // 随机决定左右方向
+            GameManager.Instance.isLeft = Random.value > 0.5f;
+            // 根据方向调整x的范围
+            if (GameManager.Instance.isLeft)
+            {
+                GameManager.Instance.SetActiveImage(true,false);
+                x = Random.Range(-6f, -2f);
+            }
+            else
+            {
+                GameManager.Instance.SetActiveImage(false, true);
+                x = Random.Range(2f, 6f);
+            }
             z = Random.Range(playerFieldZRange.x, playerFieldZRange.y);
             y = playerHeights[Random.Range(0, playerHeights.Length)];
             switch (y)
@@ -99,6 +112,8 @@ public class NewBallMovement : MonoBehaviour
         }
         else
         {
+
+            GameManager.Instance.SetActiveImage(false, false);
             // 生成AI场地的目标点
             x = Random.Range(aiFieldXRange.x, aiFieldXRange.y);
             z = Random.Range(aiFieldZRange.x, aiFieldZRange.y);
@@ -160,28 +175,31 @@ public class NewBallMovement : MonoBehaviour
         down = Down;
     }
 
+    public void SetServeMode(bool isPlayerServing)
+    {
+        isServing = isPlayerServing;
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
             isMoving = false;
-            GetComponent<Rigidbody>().velocity = Vector3.zero;
             if (currentIndicator != null)
             {
                 Destroy(currentIndicator);
             }
             if (currentVFXfallPos != null) Destroy(currentVFXfallPos);
+            gameObject.GetComponent<Collider>().enabled= false;
+            // 延迟一小段时间后销毁球并开始新回合
+            StartCoroutine(DestroyBallAndStartNewRound());
         }
     }
 
-    private void OnDrawGizmos()
+    private IEnumerator DestroyBallAndStartNewRound()
     {
-        if (Application.isPlaying)
-        {
-                Gizmos.color = Color.red;
-                Gizmos.DrawLine(transform.position, targetPos);
-                Gizmos.DrawSphere(targetPos, 0.2f);
-            
-        }
+        yield return new WaitForSeconds(1f);
+        GameManager.Instance.StartNewRound();
+        Destroy(gameObject);
     }
 }

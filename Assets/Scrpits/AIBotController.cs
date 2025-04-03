@@ -49,6 +49,7 @@ public class AIBotController : Singleton<AIBotController>
                 NewBallMovement ball = other.GetComponent<NewBallMovement>();
                 if (ball != null)
                 {
+                    ball.transform.SetParent(null);
                     ball.LaunchToPlayerCourt();
 
                     // �������ӻ�����Ч����Ч
