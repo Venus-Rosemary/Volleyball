@@ -40,20 +40,16 @@ public class AIBotController : Singleton<AIBotController>
     {
         if (other.CompareTag("Ball"))
         {
-            // ����Ƿ���Ի�����ȴʱ�䣩
             if (Time.time - lastHitTime >= hitCooldown)
             {
                 lastHitTime = Time.time;
 
-                // ��ȡ���������������ҳ���
                 NewBallMovement ball = other.GetComponent<NewBallMovement>();
                 if (ball != null)
                 {
                     ball.transform.SetParent(null);
                     ball.LaunchToPlayerCourt();
 
-                    // �������ӻ�����Ч����Ч
-                    // PlayHitSound();
                 }
             }
         }

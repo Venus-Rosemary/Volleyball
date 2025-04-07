@@ -67,7 +67,7 @@ public class PlayerController : MonoBehaviour
                     else if (ballMovement.top && Input.GetKey(KeyCode.P) && correctDirectionKey)
                     {
                         shouldActivate = true;
-                        HitBallTrigger.transform.localPosition = new Vector3(0, 1.5f, 1);
+                        HitBallTrigger.transform.localPosition = new Vector3(0, 1.5f, 0);
                     }
                 }
 
@@ -117,11 +117,12 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-
+    public float fallPosx;
+    public float fallPosz;
     void OnDrawGizmos()
     {
         DrawLine_Boundary(Color.blue, new Vector3(0,0.3f,0), new Vector3(boundaryX,0, boundaryZ)); // 绘制移动边界线
-        DrawLine_Boundary(Color.green, new Vector3(0, 0.3f, 0), new Vector3(6, 0, 12));// 绘制落点边界线
+        DrawLine_Boundary(Color.green, new Vector3(0, 0.1f, 0), new Vector3(fallPosx, 0, fallPosz));// 绘制落点边界线
     }
 
     //绘制矩形边界

@@ -129,27 +129,33 @@ public class NewBallMovement : MonoBehaviour
         // 将位置转换到游戏空间进行计算
         Vector3 gameSpaceStart = CoordinateHelper.WorldToGameSpace(startPos);
         Vector3 gameSpaceTarget = CoordinateHelper.WorldToGameSpace(targetPos);
-        Vector3 displacement = gameSpaceTarget - gameSpaceStart;
         
-        float netHeight = 5f;
-        float heightOffset = 0f;
+        // 根据起始高度动态计算网处的高度
+        float heightAtNet = Mathf.Lerp(10f, 5f, gameSpaceStart.y / 4f);
         
-        // 在游戏空间中检查是否跨网
-        if (gameSpaceStart.z * gameSpaceTarget.z < 0)
-        {
-            heightOffset = netHeight * 1.2f;
-        }
-
-        float gravity = Physics.gravity.magnitude;
-        float time = totalTime;
+        // 计算最高点
+        float maxHeight = Mathf.Max(
+            heightAtNet,
+            gameSpaceStart.y + Vector3.Distance(gameSpaceStart, gameSpaceTarget) * 0.3f
+        );
+    
+        // 设置控制点（在游戏空间中）
+        Vector3[] controlPoints = new Vector3[3];
+        controlPoints[0] = gameSpaceStart;
+        controlPoints[1] = new Vector3(
+            (gameSpaceStart.x + gameSpaceTarget.x) * 0.5f,
+            maxHeight,
+            0f
+        );
+        controlPoints[2] = gameSpaceTarget;
+    
+        // 计算初始速度（在游戏空间中）
+        float time = totalTime / 2f;
+        Vector3 midPoint = CalculateParabolaPoint(controlPoints[0], controlPoints[1], controlPoints[2], 0.5f);
+        Vector3 gameSpaceVelocity = (midPoint - gameSpaceStart) / time;
         
-        Vector3 velocityXZ = displacement / time;
-        velocityXZ.y = 0;
-
-        float velocityY = (displacement.y - 0.5f * -gravity * time * time) / time;
-        
-        // 将计算得到的速度转换回世界空间
-        initialVelocity = CoordinateHelper.GameToWorldSpace(velocityXZ + Vector3.up * velocityY);
+        // 转换回世界空间
+        initialVelocity = CoordinateHelper.GameToWorldSpace(gameSpaceVelocity);
     }
 
     private void Update()
@@ -157,17 +163,37 @@ public class NewBallMovement : MonoBehaviour
         if (!isMoving) return;
 
         moveTime += Time.deltaTime;
-        float t = moveTime;
+        float t = moveTime / totalTime;
         
         // 在游戏空间中计算抛物线
         Vector3 gameSpaceStart = CoordinateHelper.WorldToGameSpace(startPos);
-        Vector3 gameSpaceVelocity = CoordinateHelper.WorldToGameSpace(initialVelocity);
-        Vector3 gameSpaceNewPos = gameSpaceStart + gameSpaceVelocity * t + 0.5f * Physics.gravity * t * t;
+        Vector3 gameSpaceTarget = CoordinateHelper.WorldToGameSpace(targetPos);
+        float heightAtNet = Mathf.Lerp(10f, 8f, gameSpaceStart.y / 4f);
+    
+        Vector3 gameSpaceMid = new Vector3(
+            (gameSpaceStart.x + gameSpaceTarget.x) * 0.5f,
+            heightAtNet,
+            0f
+        );
+    
+        Vector3 gameSpaceNewPos = CalculateParabolaPoint(
+            gameSpaceStart,
+            gameSpaceMid,
+            gameSpaceTarget,
+            t
+        );
         
-        // 将结果转换回世界空间
+        // 转换回世界空间
         transform.position = CoordinateHelper.GameToWorldSpace(gameSpaceNewPos);
     }
-
+    private Vector3 CalculateParabolaPoint(Vector3 start, Vector3 mid, Vector3 end, float t)
+    {
+        float oneMinusT = 1f - t;
+        return
+        oneMinusT * oneMinusT * start +
+        2f * oneMinusT * t * mid +
+        t * t * end;
+    }
     private void SetToPlayerBool(bool Top,bool Centre,bool Down)
     {
         top = Top;
@@ -190,7 +216,19 @@ public class NewBallMovement : MonoBehaviour
                 Destroy(currentIndicator);
             }
             if (currentVFXfallPos != null) Destroy(currentVFXfallPos);
-            gameObject.GetComponent<Collider>().enabled= false;
+            gameObject.GetComponent<Collider>().enabled = false;
+
+            // 判断得分
+            Vector3 gameSpacePos = CoordinateHelper.WorldToGameSpace(transform.position);
+            if (gameSpacePos.z > 0)
+            {
+                GameManager.Instance.AddPlayerScore();
+            }
+            else
+            {
+                GameManager.Instance.AddAIScore();
+            }
+
             // 延迟一小段时间后销毁球并开始新回合
             StartCoroutine(DestroyBallAndStartNewRound());
         }

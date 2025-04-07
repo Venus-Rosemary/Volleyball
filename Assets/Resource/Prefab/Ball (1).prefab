@@ -148,9 +148,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetIndicatorPrefab: {fileID: 1383376130814591976, guid: 35858dcab6476ae46ac978a51d00fbf4, type: 3}
   VFXfallPosPrefab: {fileID: 1383376130814591976, guid: b9496bc111bf4e44fa47b29ab606b99e, type: 3}
-  totalTime: 3
+  totalTime: 2
   isServing: 1
   top: 0
   centre: 0
   down: 0
-  isLeft: 0

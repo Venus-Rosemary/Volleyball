@@ -1,8 +1,11 @@
+using TMPro;
 using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
 {
+    [Header("球的预制体")]
     public GameObject ballPrefab;
+    [Header("发球点")]
     public Transform playerServePoint;
     public Transform aiServePoint;
     private bool isPlayerServe = true;
@@ -11,6 +14,11 @@ public class GameManager : Singleton<GameManager>
     public bool isLeft = false; // 添加左右方向判断
     public GameObject leftImage;
     public GameObject rightImage;
+
+    public int playerScore = 0;
+    public int aiScore = 0;
+    public TMP_Text PlayerS;
+    public TMP_Text AiS;
 
     public void SetActiveImage(bool leftB,bool rightB)
     {
@@ -40,6 +48,7 @@ public class GameManager : Singleton<GameManager>
 
     private void SpawnBallAtAI()
     {
+        AIBotController.Instance.targetPosition = AIBotController.Instance.transform.position;
         GameObject ball = Instantiate(ballPrefab, aiServePoint.position, Quaternion.identity);
         ball.transform.SetParent(aiServePoint);
         ball.GetComponent<NewBallMovement>().SetServeMode(false);
@@ -49,5 +58,20 @@ public class GameManager : Singleton<GameManager>
     void Start()
     {
         StartNewRound();
+        PlayerS.text = "PlayerScore:" + playerScore.ToString();
+        AiS.text = "AiScore:" + aiScore.ToString();
+    }
+
+    public void AddPlayerScore()
+    {
+        playerScore++;
+        PlayerS.text="PlayerScore:"+playerScore.ToString();
+    }
+
+    public void AddAIScore()
+    {
+        // AI得分
+        aiScore++;
+        AiS.text = "AiScore:" + aiScore.ToString();
     }
 }
