@@ -14,8 +14,11 @@ public class PlayerController : MonoBehaviour
 
     public GameObject HitBallTrigger;
 
+    private Vector3 playerStartPos;
+
     void Start()
     {
+        playerStartPos= transform.localPosition;
         if (HitBallTrigger != null)
         {
             HitBallTrigger.SetActive(false);
@@ -26,6 +29,11 @@ public class PlayerController : MonoBehaviour
     {
         Player_Move();
         CheckHitTrigger();
+    }
+
+    public void SetPlayerStartPos()
+    {
+        transform.localPosition = playerStartPos;
     }
 
     private void CheckHitTrigger()
@@ -67,7 +75,7 @@ public class PlayerController : MonoBehaviour
                     else if (ballMovement.top && Input.GetKey(KeyCode.P) && correctDirectionKey)
                     {
                         shouldActivate = true;
-                        HitBallTrigger.transform.localPosition = new Vector3(0, 1.5f, 0);
+                        HitBallTrigger.transform.localPosition = new Vector3(0, 2f, 0);
                     }
                 }
 

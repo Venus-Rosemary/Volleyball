@@ -48,7 +48,8 @@ public class NewBallMovement : MonoBehaviour
         SetToPlayerBool(false, false, false);
         LaunchBall(transform.position, true);
     }
-    public void LaunchBall(Vector3 hitPosition, bool toPlayerField)
+
+    public void ClearAllIndicator()
     {
         // 清除之前的指示器
         if (currentIndicator != null)
@@ -56,6 +57,11 @@ public class NewBallMovement : MonoBehaviour
             Destroy(currentIndicator);
         }
         if (currentVFXfallPos != null) Destroy(currentVFXfallPos);
+    }
+
+    public void LaunchBall(Vector3 hitPosition, bool toPlayerField)
+    {
+        ClearAllIndicator();
 
         startPos = hitPosition;
         targetPos = GenerateTargetPosition(toPlayerField);
@@ -211,11 +217,7 @@ public class NewBallMovement : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isMoving = false;
-            if (currentIndicator != null)
-            {
-                Destroy(currentIndicator);
-            }
-            if (currentVFXfallPos != null) Destroy(currentVFXfallPos);
+            ClearAllIndicator();
             gameObject.GetComponent<Collider>().enabled = false;
 
             // 判断得分

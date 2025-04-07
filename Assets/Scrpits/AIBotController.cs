@@ -10,6 +10,18 @@ public class AIBotController : Singleton<AIBotController>
     private Vector3 velocity = Vector3.zero;
     public Vector3 targetPosition;
 
+    private Vector3 AIStartPos;
+
+    private void Start()
+    {
+        AIStartPos = transform.localPosition;
+    }
+
+    public void SetAIStartPos()
+    {
+        transform.localPosition = AIStartPos;
+    }
+
     public void SetTarget(Vector3 startPos, Vector3 position)
     {
         // 将世界坐标转换为游戏空间进行计算
