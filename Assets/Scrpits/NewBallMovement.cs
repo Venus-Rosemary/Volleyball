@@ -21,12 +21,18 @@ public class NewBallMovement : MonoBehaviour
     private readonly Vector2 aiFieldZRange = new Vector2(4f, 13f);
     private readonly Vector2 playerFieldXRange = new Vector2(-6f, 6f);
     private readonly Vector2 playerFieldZRange = new Vector2(-13f, -4f);
-    private readonly float[] playerHeights = new float[] { 0f, 2f, 4f };
+    private readonly float[] playerHeights = new float[] { 1f, 2f, 4f };
 
     public bool top = false;
     public bool centre = false;
     public bool down= false;
-    
+
+    private float initialRingScale = 0.3f; // 圆环初始缩放
+    private float minRingScale = 0.15f; // 圆环最小缩放
+    private Transform ringTransform; // 圆环的Transform组件
+    private GameObject vfxObject; // VFX特效对象
+    private readonly float vfxActivateDistance = 8f; // 触发VFX的距离
+
     private void Start()
     {
         if (GetComponent<Rigidbody>() == null)
@@ -57,6 +63,8 @@ public class NewBallMovement : MonoBehaviour
             Destroy(currentIndicator);
         }
         if (currentVFXfallPos != null) Destroy(currentVFXfallPos);
+        ringTransform = null;
+        vfxObject = null;
     }
 
     public void LaunchBall(Vector3 hitPosition, bool toPlayerField)
@@ -84,7 +92,6 @@ public class NewBallMovement : MonoBehaviour
         //如果有AI控制器，通知AI
         if (!toPlayerField && FindObjectOfType<AIBotController>() != null)
         {
-            Debug.Log("打给ai的");
             AIBotController.Instance.SetTarget(transform.position, targetPos);
         }
     }
@@ -111,7 +118,7 @@ public class NewBallMovement : MonoBehaviour
             y = playerHeights[Random.Range(0, playerHeights.Length)];
             switch (y)
             {
-                case 0: SetToPlayerBool(false, false, true); break;
+                case 1: SetToPlayerBool(false, false, true); break;
                 case 2: SetToPlayerBool(false, true, false); break;
                 case 4: SetToPlayerBool(true, false, false); break;
             }
@@ -191,6 +198,35 @@ public class NewBallMovement : MonoBehaviour
         
         // 转换回世界空间
         transform.position = CoordinateHelper.GameToWorldSpace(gameSpaceNewPos);
+
+        // 更新圆环缩放和VFX激活
+        if (currentIndicator != null)
+        {
+            // 第一次获取圆环和VFX引用
+            if (ringTransform == null)
+            {
+                ringTransform = currentIndicator.transform.GetChild(0);
+                ringTransform.localScale = Vector3.one * initialRingScale;
+                vfxObject = currentIndicator.transform.GetChild(1).gameObject; // 假设VFX是第二个子物体
+                vfxObject.SetActive(false); // 初始时关闭VFX
+            }
+
+            // 计算球到落点的距离
+            float distance = Vector3.Distance(
+                new Vector3(transform.position.x, 0, transform.position.z),
+                new Vector3(currentIndicator.transform.position.x, 0, currentIndicator.transform.position.z)
+            );
+
+            // 根据距离计算缩放值（距离越近，缩放越小）
+            float scale = Mathf.Lerp(minRingScale, initialRingScale, distance / 10f);
+            ringTransform.localScale = Vector3.one * scale;
+
+            // 当距离小于等于2时激活VFX
+            if (vfxObject != null)
+            {
+                vfxObject.SetActive(distance <= vfxActivateDistance);
+            }
+        }
     }
     private Vector3 CalculateParabolaPoint(Vector3 start, Vector3 mid, Vector3 end, float t)
     {

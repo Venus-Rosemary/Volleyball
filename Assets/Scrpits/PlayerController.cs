@@ -52,8 +52,12 @@ public class PlayerController : MonoBehaviour
                     if (Input.GetKey(KeyCode.F))
                     {
                         shouldActivate = true;
-                        ballMovement.isServing=false; 
-                        HitBallTrigger.transform.localPosition = new Vector3(0, 0, 1);
+
+                        HitBallTrigger.transform.localPosition = new Vector3(0, 1, 1);
+                        if (ballMovement.transform.parent!=null)
+                        {
+                            ballMovement.isServing = false;
+                        }
                     }
                 }
                 else
